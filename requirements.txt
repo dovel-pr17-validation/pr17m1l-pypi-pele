@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+networkx
+cython
+sqlalchemy
+munkres
+pyro4
+numpydoc
+pytest
+omp-thread-count

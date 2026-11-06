@@ -1,0 +1,23 @@
+"""
+# distutils: language = C++
+# cython: language_level=3str
+"""
+# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
+import numpy as np
+
+cimport numpy as np
+
+cimport pele.potentials._pele as _pele
+from pele.potentials._pele cimport shared_ptr
+
+# use external c++ class
+cdef extern from "pele/morse.hpp" namespace "pele":
+    cdef cppclass  cMorse "pele::Morse":
+        cMorse(double rho, double r0, double A) except +
+
+
+cdef class Morse(_pele.BasePotential):
+    """define the python interface to the c++ Morse implementation
+    """
+    def __cinit__(self, rho=1.0, r0=1.0, A=1.0):
+        self.thisptr = shared_ptr[_pele.cBasePotential]( <_pele.cBasePotential*>new cMorse(rho, r0, A) )

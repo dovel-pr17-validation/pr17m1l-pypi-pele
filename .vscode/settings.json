@@ -1,0 +1,25 @@
+{
+  "python.pythonPath": "/home/praharsh/anaconda3/envs/changebranch3/bin/python",
+  "cSpell.words": [
+    "basinerror",
+    "boxvec",
+    "CVODE",
+    "Eigen",
+    "eigvals",
+    "hoomd",
+    "mathrm",
+    "ndim",
+    "Stillinger",
+    "sunctx"
+  ],
+  "esbonio.sphinx.confDir": "",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none",
+  "files.associations": {
+    "*.in": "lmps",
+    "*.pyx": "python",
+    "core": "cpp"
+  }
+}

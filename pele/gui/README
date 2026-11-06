@@ -1,0 +1,12 @@
+I decided for qt since it has a very nice API and gui designer. 
+The file MainWindow.py is automatically generated using the command
+
+  pyuic5 MainWindow.ui -o MainWindow.py
+
+To edit the gui use
+
+  designer MainWindow.ui
+
+Runtime dependencies are PyQt5, PyOpenGL, and system GLU/GLUT libraries.
+Meson generates the Python forms and resources during the build when pyuic5
+and pyrcc5 are available. Use -Dgui=enabled to require GUI support.

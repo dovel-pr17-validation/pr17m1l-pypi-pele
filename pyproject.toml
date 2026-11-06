@@ -1,0 +1,41 @@
+[build-system]
+requires = [
+    "meson-python>=0.15",
+    "meson>=1.3",
+    "ninja",
+    "numpy>=1.26",
+    "cython>=3",
+]
+build-backend = "mesonpy"
+
+[project]
+name = "pele"
+version = "0.1.0"
+description = "Python energy landscape explorer: global optimization, minimization, basins of attraction"
+readme = "README.rst"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy",
+    "networkx",
+    "matplotlib",
+    "sqlalchemy>=1.4,<2",
+    "munkres",
+    "pyro4",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+gui = ["pyqt5", "PyOpenGL"]
+lammps = ["lammps[mpi]"]
+
+[project.urls]
+Homepage = "https://github.com/martiniani-lab/pele"

@@ -1,0 +1,195 @@
+name: Tests
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+  pull_request:
+    branches: ["master"]
+
+env:
+  BUILD_TYPE: Release
+
+# a new push to a branch/PR cancels its older, still running workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+        python-version: ["3.14"]  # only used by the python part
+        # C++ and Python suites run as separate parallel jobs
+        part: [cpp, python]
+    name: ${{ matrix.part }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # fail fast on hangs instead of the 6h default
+    timeout-minutes: 30
+    env:
+      # meson uses ccache when it is on PATH. Release builds use -march=native; hash the resolved target so objects
+      # cached on one runner CPU are never reused on a different CPU
+      CCACHE_COMPILERCHECK: "%compiler% -v;%compiler% -march=native -Q --help=target"
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.part }}
+          max-size: 1G
+
+      # SUNDIALS, Eigen and LAPACK come from conda-forge for both parts
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: ""
+
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: |
+          conda create -y -n pele-env -c conda-forge python=${{ matrix.python-version }} \
+            sundials eigen blas-devel meson ninja pkg-config
+
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ gfortran libsuitesparse-dev lcov
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew list gcc@15 || brew install gcc@15
+          brew list suite-sparse || brew install suite-sparse
+          # homebrew gcc for C, C++ and Fortran (Apple clang has no OpenMP/Fortran)
+          echo "CC=gcc-15" >> $GITHUB_ENV
+          echo "CXX=g++-15" >> $GITHUB_ENV
+          echo "FC=gfortran-15" >> $GITHUB_ENV
+
+      - name: Install Python dependencies
+        if: matrix.part == 'python'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
+          python -m pip install --upgrade pip
+          pip install meson-python
+          pip install "numpy>=1.24" "scipy>=1.9"
+          pip install matplotlib networkx "cython>=3.0"
+          pip install "sqlalchemy>=1.4,<2.0" munkres scikit-sparse
+          pip install pytest pyyaml packaging
+          # LAMMPS (with its liblammps and MPICH) so the LAMMPS potential is built and tested
+          pip install "lammps[mpi]"
+          # Install coverage tools
+          pip install pytest-cov coverage
+
+      - name: Get GoogleTest
+        if: matrix.part == 'cpp'
+        run: git submodule update --init cpp_tests/gtest
+
+      - name: Build C++ tests
+        if: matrix.part == 'cpp'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
+          # coverage on Linux; the macOS runner's gcc has no working gcov setup here
+          coverage=${{ matrix.os == 'ubuntu-24.04' && 'true' || 'false' }}
+          meson setup build-tests -Dpython=disabled -Dtests=true -Dbuildtype=debug -Db_coverage=$coverage
+          meson compile -C build-tests
+
+      - name: Run C++ tests
+        if: matrix.part == 'cpp'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
+          meson test -C build-tests --print-errorlogs
+
+      - name: C++ coverage report (Linux)
+        if: matrix.os == 'ubuntu-24.04' && matrix.part == 'cpp'
+        run: |
+          lcov --directory build-tests --capture --output-file coverage.info \
+            --ignore-errors usage,inconsistent,empty,count,mismatch --rc geninfo_unexecuted_blocks=1
+          lcov --remove coverage.info "/usr/*" "$CONDA/*" "*/cpp_tests/*" "*/Eigen/*" "*gtest*" "*gmock*" \
+            --output-file coverage.info.cleaned --ignore-errors unused,empty,count,mismatch
+          lcov --list coverage.info.cleaned
+
+      - name: Build python library
+        if: matrix.part == 'python'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
+          # editable: pytest and coverage run on the source tree
+          MACOSX_DEPLOYMENT_TARGET=12.0 pip install --no-build-isolation --no-deps -e . -v
+
+      - name: Run python tests with coverage
+        if: matrix.part == 'python'
+        shell: bash -l {0}
+        run: |
+          conda activate pele-env
+          export OMP_NUM_THREADS=1
+          pytest pele/ -v --cov=pele --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-24.04'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ matrix.part == 'cpp' && './coverage.info.cleaned' || './coverage.xml' }}
+          flags: ${{ matrix.part }}
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # the README install: conda for the C/C++ libraries, `pip install .` for the rest,
+  # then the tests against the installed package from outside the source tree
+  pip-install:
+    # fail fast on hangs instead of the 6h default
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # only the newest Python (unpinned, so new releases are picked up automatically);
+        # Ubuntu uses the system gcc, macOS the runner's homebrew gcc
+        os: [ubuntu-24.04, macos-latest]
+        python: [latest]
+    runs-on: ${{ matrix.os }}
+    name: pip-install (${{ matrix.os }}, python ${{ matrix.python }})
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: ""
+
+      - name: Create environment
+        run: |
+          if [ "${{ matrix.python }}" = latest ]; then pin=""; else pin="=${{ matrix.python }}"; fi
+          conda create -y -n pele -c conda-forge "python$pin" sundials eigen blas-devel
+
+      - name: pip install
+        run: |
+          conda activate pele
+          python --version
+          # Apple clang has no OpenMP/Fortran
+          if [ "$RUNNER_OS" = macOS ]; then export CC=gcc-15 CXX=g++-15 FC=gfortran-15; fi
+          python -m pip install . -v -Csetup-args=-Dnative=false
+
+      - name: Test installed package
+        run: |
+          conda activate pele
+          python -m pip install pytest
+          cd "$RUNNER_TEMP"
+          OMP_NUM_THREADS=1 python -m pytest --pyargs pele -q

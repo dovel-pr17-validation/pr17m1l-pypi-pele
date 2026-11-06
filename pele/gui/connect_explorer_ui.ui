@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>928</width>
+    <height>718</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="NEBEnergyWidget" name="wgt_neb" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Show3DWithSlider" name="wgt_ogl_slider" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QFormLayout" name="formLayout">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QPushButton" name="btn_refineTS">
+         <property name="text">
+          <string>refine transition state</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="btn_show_neb_path">
+         <property name="text">
+          <string>show NEB path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="btn_show_ts_path">
+         <property name="text">
+          <string>show TS refinement trajectory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="btn_show_pushoff">
+         <property name="text">
+          <string>show pushoff path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>refine all</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Transition states found</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="list_ts"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Show3DWithSlider</class>
+   <extends>QWidget</extends>
+   <header>pele.gui.show3d_with_slider.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NEBEnergyWidget</class>
+   <extends>QWidget</extends>
+   <header>pele.gui.neb_explorer.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>btn_show_ts_path</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>show_TS_path()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>686</x>
+     <y>152</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>628</x>
+     <y>91</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_show_neb_path</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>show_neb_path()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>586</x>
+     <y>115</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>628</x>
+     <y>56</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_show_pushoff</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>show_pushoff_path()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>607</x>
+     <y>189</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>631</x>
+     <y>144</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_refineTS</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>on_refine_transition_state()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>575</x>
+     <y>28</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>923</x>
+     <y>17</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>list_ts</sender>
+   <signal>currentItemChanged(QListWidgetItem*,QListWidgetItem*)</signal>
+   <receiver>Form</receiver>
+   <slot>on_list_ts_selected()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>736</x>
+     <y>475</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>922</x>
+     <y>480</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>on_refine_all_ts()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>517</x>
+     <y>64</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>925</x>
+     <y>65</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>show_TS_path()</slot>
+  <slot>show_neb_path()</slot>
+  <slot>on_refine_transition_state()</slot>
+  <slot>show_pushoff_path()</slot>
+  <slot>on_list_ts_selected()</slot>
+  <slot>on_refine_all_ts()</slot>
+ </slots>
+</ui>

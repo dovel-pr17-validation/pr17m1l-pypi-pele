@@ -1,0 +1,14 @@
+get gtest
+---------
+
+build the tests using
+
+```
+git submodule update --init --recursive
+cd cpp_tests/source
+cmake -DCMAKE_BUILD_TYPE=Debug .
+make
+```
+
+current version uses gtest 1.12.x
+remember to keep `#include <gtest/gtest.h>` at the top of the test file. the order of the includes may raise compilation errors.
